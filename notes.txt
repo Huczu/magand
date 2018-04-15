@@ -1,0 +1,11 @@
+Plik konfiguracyjny:
+Nazwa macierzy (ex. Spin-Orbit Matrix, Spin-Orbit Matrixblock)
+Ilosc symetrii Spin-Orbit Matrixblock (ex 2,4,8)
+odleglosci wszystkie(rvec)
+Konkretny element lub wszystkie elementy
+Dane:
+Spin-Orbit Matrix
+Spin-Orbit Matrixblock
+Eigenvectors
+Composition of spin-orbit eigenvectors
+Expectation values DMX/DMY/DMZ
