@@ -7,15 +7,19 @@ from timeit import default_timer as timer
 
 inputFilename = ''
 outputFoldername = ''
+
 def findHeader(pattern, splittedLine):
     if splittedLine and splittedLine[0] == pattern:
         return True
 
     return False
 
-def matchPattern(pattern, text):
-    if re.match(pattern, text) is not None:
-        return True
+def findPattern(file, pattern, skipLinesCount = 0):
+    for line in file:
+        if re.match(pattern, line) is not None:
+            if skipLinesCount > 0:
+                skipLines(file, skipLinesCount)
+            return True
 
     return False
 
@@ -23,80 +27,154 @@ def skipLines(file, lines):
     for i in range(lines):
         next(file)
 
-def findSpinOrbitMatrixBlock(file, outputFilename, symetry):
+def removeDuplicatesFromList(arg):
+    return list(dict.fromkeys(arg))
+
+def findExpectedDMValues(file, outputFilename, axis):
     data = []
-    match = False
-    foundSymetry = False
     header = []
     blankLineCount = 0
     row = 0
     count = 0
-
-    for line in file:
-        if not foundSymetry:
-            pattern = '  Results for symmetry ' + str(symetry)
-            foundSymetry = matchPattern(pattern, line)
-        else:
-            if not match:
-                pattern = ' => Spin-Orbit Matrixblock \(\S+\)'
-                match = matchPattern(pattern, line)
-                if match:
-                    skipLines(file, 3)
-            else:
-                splittedLine = line.split()
-                if matchPattern(' => Eigenvalues ', line):
-                    blankLineCount += 1
-                elif findHeader('State', splittedLine):
-                    splittedLine[2:5] = [''.join(splittedLine[2:5])]
-                    header += splittedLine
-                    row = 0
-                    blankLineCount = 0
-                elif len(splittedLine) > 1:
-                    rowStart = 0
-                    if row % 2 == 0:
-                        rowStart = 3
-                    if len(data) > row:
-                        if rowStart == 3:
-                            splittedLine[2:4] = [''.join(splittedLine[2:4])]
-                        data[row] += splittedLine[rowStart:]
+    pattern = ' Property matrix of the DM' + axis + ' operator'
+    skilLinesCount = 3
+    while findPattern(file, pattern, 3):
+        for line in file:
+            splittedLine = line.split()
+            if findHeader('Nr', splittedLine): # found header
+                splittedLine[1:4] = [''.join(splittedLine[1:4])]
+                header += splittedLine
+                row = 0
+                blankLineCount = 0
+            elif len(splittedLine) > 1:
+                rowStart = 0
+                if row % 2 == 0:
+                    rowStart = 2
+                if len(data) > row:
+                    data[row] += splittedLine[rowStart:]
+                else:
+                    if rowStart == 0:
+                        rowStart = 2
                     else:
-                        if rowStart == 0:
-                            rowStart = 3
-                        else:
-                            rowStart = 0
-                            splittedLine[2:4] = [''.join(splittedLine[2:4])]
-                        data.append(splittedLine)
+                        rowStart = 0
+                    data.append(splittedLine)
                         
-                        data[row] = ['']*rowStart + data[row]
+                    data[row] = ['']*rowStart + data[row]
+                blankLineCount = 0
+                row += 1
+            else:
+                blankLineCount += 1
+            if blankLineCount == 2: #time to stop
+                data.append([])
+                header = removeDuplicatesFromList(header) #Fix the header
+                writeToCSV(outputFilename, 'a', header, data)                    
+                count += 1
+                header = []
+                data = []
+                blankLineCount = 0
+                break
+    return count #debug only
+
+def findSpinOrbitEigenvectors(file, outputFilename):
+    data = []
+    header = []
+    blankLineCount = 0
+    row = 0
+    count = 0
+    pattern = ' Composition of spin-orbit eigenvectors'
+    skipLinesCount = 2
+    while findPattern(file, pattern, skipLinesCount):
+        for line in file:
+            splittedLine = line.split()
+            if findHeader('Nr', splittedLine): # found header
+                splittedLine[4:7] = [''.join(splittedLine[4:7])]
+                header += splittedLine
+                row = 0
+                blankLineCount = 0
+            elif len(splittedLine) > 1: #parse non empty line
+                rowStart = 5
+                splittedLine[4:6] = [''.join(splittedLine[4:6])]
+                if len(data) > row:
+                    data[row] += splittedLine[rowStart:]
+                else:
+                    data.append(splittedLine)
                     blankLineCount = 0
                     row += 1
+            else:
+                blankLineCount += 1
+            if blankLineCount == 2: #time to stop
+                data.append([])
+                header = removeDuplicatesFromList(header) #Fix the header
+                header.insert(3, 'Sym') # special hack
+                writeToCSV(outputFilename, 'a', header, data)                    
+                count += 1
+                header = []
+                data = []
+                blankLineCount = 0
+                break
+    return count
+
+def findSpinOrbitMatrixBlock(file, outputFilename, symmetry):
+    data = []
+    header = []
+    blankLineCount = 0
+    row = 0
+    count = 0
+    symmetryPattern = '  Results for symmetry ' + str(symmetry)
+    matrixPattern = ' => Spin-Orbit Matrixblock \(\S+\)'
+    skipLinesCount = 3
+    while findPattern(file, symmetryPattern) and findPattern(file, matrixPattern, skipLinesCount):
+        for line in file:
+            splittedLine = line.split()
+            if re.match(' => Eigenvalues ', line) is not None:
+                blankLineCount += 1
+            elif findHeader('State', splittedLine):
+                splittedLine[2:5] = [''.join(splittedLine[2:5])]
+                header += splittedLine
+                row = 0
+                blankLineCount = 0
+            elif len(splittedLine) > 1:
+                rowStart = 0
+                if row % 2 == 0:
+                    rowStart = 3
+                if len(data) > row:
+                    if rowStart == 3:
+                        splittedLine[2:4] = [''.join(splittedLine[2:4])]
+                    data[row] += splittedLine[rowStart:]
                 else:
-                    blankLineCount += 1
-                if blankLineCount == 2: #time to stop
-                    data.append([])
-                    header = list(dict.fromkeys(header))    #Fix the header
-                    writeToCSV(outputFilename, 'a', header, data)                    
-                    count += 1
-                    header = []
-                    data = []
-                    match = False
-                    foundSymetry = False
-                    blankLineCount = 0
+                    if rowStart == 0:
+                        rowStart = 3
+                    else:
+                        rowStart = 0
+                        splittedLine[2:4] = [''.join(splittedLine[2:4])]
+                    data.append(splittedLine)
+                        
+                    data[row] = ['']*rowStart + data[row]
+                blankLineCount = 0
+                row += 1
+            else:
+                blankLineCount += 1
+            if blankLineCount == 2: #time to stop
+                data.append([])
+                header = removeDuplicatesFromList(header) #Fix the header
+                writeToCSV(outputFilename, 'a', header, data)                    
+                count += 1
+                header = []
+                data = []
+                blankLineCount = 0
+                break
     return count #debug only
 
 def findSpinOrbitMatrix(file, outputFilename):
     data = []
-    match = False
     header = []
     blankLineCount = 0
     row = 0
     count = 0
+    pattern = ' Spin-Orbit Matrix \(\S+\)'
 
-    for line in file:
-        if not match:
-            pattern = ' Spin-Orbit Matrix \(\S+\)'
-            match = matchPattern(pattern, line)
-        else:
+    while findPattern(file, pattern):
+        for line in file:
             splittedLine = line.split()
             if findHeader('Nr', splittedLine):
                 header += splittedLine
@@ -122,13 +200,13 @@ def findSpinOrbitMatrix(file, outputFilename):
                 blankLineCount += 1
             if blankLineCount == 3: #time to stop
                 data.append([])
-                header = list(dict.fromkeys(header))    #Fix the header
+                header = removeDuplicatesFromList(header)    #Fix the header
                 writeToCSV(outputFilename, 'a', header, data)                    
                 count += 1
                 header = []
                 data = []
-                match = False
                 blankLineCount = 0
+                break
     return count
 
 def writeToCSV(filename, mode, header, data):
@@ -197,6 +275,30 @@ def main(argv):
         print('Found %d matrixes' % count) #debug only
         end = timer()
         print('%s: %f' % ('Spin-Orbit Matrixblock', (end-start)))
+        start = end
+    with open(inputFilename) as inputFile:
+        count = findSpinOrbitEigenvectors(inputFile, matrixes['Composition of spin-orbit eigenvectors'])
+        print('Found %d matrixes' % count) #debug only
+        end = timer()
+        print('%s: %f' % ('Composition of spin-orbit eigenvectors', (end-start)))
+        start = end
+    with open(inputFilename) as inputFile:
+        count = findExpectedDMValues(inputFile, matrixes['Expectation values DMX'], 'X')
+        print('Found %d matrixes' % count) #debug only
+        end = timer()
+        print('%s: %f' % ('Expectation values DMX', (end-start)))
+        start = end
+    with open(inputFilename) as inputFile:
+        count = findExpectedDMValues(inputFile, matrixes['Expectation values DMY'], 'Y')
+        print('Found %d matrixes' % count) #debug only
+        end = timer()
+        print('%s: %f' % ('Expectation values DMY', (end-start)))
+        start = end
+    with open(inputFilename) as inputFile:
+        count = findExpectedDMValues(inputFile, matrixes['Expectation values DMZ'], 'Z')
+        print('Found %d matrixes' % count) #debug only
+        end = timer()
+        print('%s: %f' % ('Expectation values DMZ', (end-start)))
         start = end
 if __name__ == "__main__":
    main(sys.argv[1:])

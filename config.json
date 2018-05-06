@@ -10,7 +10,7 @@
 			"Expectation values DMZ"
 		],
 		"//" : "If there is no file in argv it will use this path",
-		"inputFilename" : "input/krb_so_t.out",
+		"inputFilename" : "input/narb_so_tdmf.out",
 		"outputFolder" : "output",
 		"//" : "Change this to false and put value in element array",
 		"allValues" : true,
