@@ -1,11 +1,19 @@
 Plik konfiguracyjny:
 Nazwa macierzy (ex. Spin-Orbit Matrix, Spin-Orbit Matrixblock)
 Ilosc symetrii Spin-Orbit Matrixblock (ex 2,4,8)
-odleglosci wszystkie(rvec)
-Konkretny element lub wszystkie elementy
+odleglosci wszystkie(rvec) 
+Konkretny element lub wszystkie elementy!!!!
 Dane:
-Spin-Orbit Matrix
-Spin-Orbit Matrixblock
-Eigenvectors
-Composition of spin-orbit eigenvectors
-Expectation values DMX/DMY/DMZ
+Spin-Orbit Matrix - done
+Spin-Orbit Matrixblock - done
+Eigenvectors - not done
+Composition of spin-orbit eigenvectors - done
+Expectation values DMX/DMY/DMZ - done
+
+
+Format danych:
+Czy wstawiac naglowki czy czyste dane?
+Rozdzielenie macierzy do oddzielnych plikow czy jeden duzy csv z wszystkimi rvec
+
+eigenvectors - dyskusja
+Symetrie
