@@ -10,11 +10,13 @@
 			"Expectation values DMZ"
 		],
 		"//" : "If there is no file in argv it will use this path",
-		"inputFilename" : "input/narb_so_tdmf.out",
+		"inputFilename" : "input/krb_so_t.out",
 		"outputFolder" : "output",
 		"//" : "Change this to false and put value in element array",
 		"allValues" : true,
-		"element" : [1,2]
+    "element": [ 1, 2 ],
+    "//" :  "Keep results in one file or group results by rvec",
+    "separateFiles" :  true
 	},
 	"SpinOrbitMatrix": {
 		"symetries" : 2
