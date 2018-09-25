@@ -21,6 +21,7 @@ Run: **python magand.py <optionalParams>**
 Magand parser can extract results to csv file of:
 * Spin-Orbit Matrix
 * Spin-Orbit Matrixblock
+* Eigenvectors
 * Composition of spin-orbit eigenvectors
 * Expectation values DMX
 * Expectation values DMY
@@ -30,8 +31,6 @@ Can group results to one file of matrix results or to separate rvec files
 Can use multiple configurations in one file  
 
 ### TODO:
-
-* Results of Eigenvectors
 * Extract result of one element
 
 ### License:

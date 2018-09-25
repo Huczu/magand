@@ -1,14 +1,14 @@
 {
 	"default" : {
-		"matrixes" : [
-			"Spin-Orbit Matrix",
-			"Spin-Orbit Matrixblock",
-			"Eigenvectors",
-			"Composition of spin-orbit eigenvectors",
-			"Expectation values DMX",
-			"Expectation values DMY",
-			"Expectation values DMZ"
-		],
+    "matrixes": [
+      "Spin-Orbit Matrix",
+      "Spin-Orbit Matrixblock",
+      "Eigenvectors",
+      "Composition of spin-orbit eigenvectors",
+      "Expectation values DMX",
+      "Expectation values DMY",
+      "Expectation values DMZ"
+    ],
 		"//" : "If there is no file in argv it will use this path",
 		"inputFilename" : "input/krb_so_t.out",
 		"outputFolder" : "output",

@@ -254,6 +254,58 @@ def findSpinOrbitMatrix(file, allValues, element, outputFilename):
     end = timer()
     print('%s: %f' % ('Spin-Orbit Matrix', (end-start)))
 
+def findEigenvectors(inputFilename, allValues, element, outputFilename, symmetry):
+    start = timer()
+    data = []
+    header = []
+    blankLineCount = 0
+    row = 0
+    count = 0
+    symmetryPattern = '    eigenvalues in ascending order \(symmetry =  ' + str(symmetry) + '\)'
+    matrixPattern = '  Basis states          Eigenvectors \(columnwise\)'
+    with open(inputFilename) as file:
+        while findPattern(file, symmetryPattern) and findPattern(file, matrixPattern):
+            for line in file:
+                splittedLine = line.split()
+                if findHeader('State', splittedLine):
+                    splittedLine[2:5] = [''.join(splittedLine[2:5])]
+                    header += splittedLine
+                    row = 0
+                    blankLineCount = 0
+                elif len(splittedLine) > 1:
+                    rowStart = 0
+                    if row % 2 == 0:
+                        rowStart = 3
+                    if len(data) > row:
+                        if rowStart == 3:
+                            splittedLine[2:4] = [''.join(splittedLine[2:4])]
+                        data[row] += splittedLine[rowStart:]
+                    else:
+                        if rowStart == 0:
+                            rowStart = 3
+                        else:
+                            rowStart = 0
+                            splittedLine[2:4] = [''.join(splittedLine[2:4])]
+                        data.append(splittedLine)
+                        
+                        data[row] = ['']*rowStart + data[row]
+                    blankLineCount = 0
+                    row += 1
+                else:
+                    blankLineCount += 1
+                if blankLineCount == 2: #time to stop
+                    count += 1
+                    data.append([])
+                    header = removeDuplicatesFromList(header) #Fix the header
+                    writeToCSV(outputFilename, 'a', allValues, count, header, data)
+                    header = []
+                    data = []
+                    blankLineCount = 0
+                    break
+    print('Found %d matrixes' % count) #debug only
+    end = timer()
+    print('%s: %f' % ('Eigenvectors', (end-start)))
+
 def createFolders(filename):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
@@ -316,7 +368,7 @@ def start(matrixes, allValues, element):
     findExpectedDMValues(inputFilename, allValues, element, matrixes['Expectation values DMX'], 'X')
     findExpectedDMValues(inputFilename, allValues, element, matrixes['Expectation values DMY'], 'Y')
     findExpectedDMValues(inputFilename, allValues, element, matrixes['Expectation values DMZ'], 'Z')
-
+    findEigenvectors(inputFilename, allValues, element, matrixes['Eigenvectors'], 1)
 def main(argv):
     global inputFilename
     global outputFoldername
