@@ -10,6 +10,13 @@ inputFilename = ''
 outputFoldername = ''
 separateFiles = False
 
+def isfloat(value):
+  try:
+    float(value)
+    return True
+  except ValueError:
+    return False
+
 def findHeader(pattern, splittedLine):
     if splittedLine and splittedLine[0] == pattern:
         return True
@@ -25,6 +32,13 @@ def findPattern(file, pattern, skipLinesCount = 0):
 
     return False
 
+def getLineByPattern(file, pattern):
+    for line in file:
+        if re.match(pattern, line) is not None:
+            return line
+
+    return ""
+
 def skipLines(file, lines):
     for i in range(lines):
         next(file)
@@ -34,6 +48,15 @@ def removeDuplicatesFromList(arg):
 
 def isAnyNumberInArray(array):
     return any(item.replace('.','',1).isdigit() for item in array)
+
+def getShiftedValue(file, pattern):
+    shiftedValueLine = getLineByPattern(file, pattern)
+    splittedLine = shiftedValueLine.split()
+    for line in splittedLine:
+        if isfloat(line):
+            return float(line)
+
+    return 0.0
 
 def findExpectedDMValues(inputFilename, allValues, element, outputFilename, axis):
     start = timer()
@@ -135,9 +158,11 @@ def findSpinOrbitMatrixBlock(inputFilename, allValues, element, outputFilename, 
     count = 0
     symmetryPattern = '  Results for symmetry ' + str(symmetry)
     matrixPattern = ' => Spin-Orbit Matrixblock \(\S+\)'
+    shiftPattern = '    The diagonal matrixelements are shifted by'
     skipLinesCount = 3
     with open(inputFilename) as file:
         while findPattern(file, symmetryPattern) and findPattern(file, matrixPattern, skipLinesCount):
+            shiftRow = ['Shift:', getShiftedValue(file, shiftPattern)]
             for line in file:
                 splittedLine = line.split()
                 if re.match(' => Eigenvalues ', line) is not None:
@@ -172,6 +197,7 @@ def findSpinOrbitMatrixBlock(inputFilename, allValues, element, outputFilename, 
                     count += 1
                     data.append([])
                     header = removeDuplicatesFromList(header) #Fix the header
+                    writeToCSV(outputFilename, 'a', allValues, count, shiftRow, [])
                     writeToCSV(outputFilename, 'a', allValues, count, header, data)
                     header = []
                     data = []
@@ -246,7 +272,8 @@ def writeToCSV(filename, mode, allValues, rvec, header, data):
         wr.writerows(data)
 
 def cleanBeforeStart(path): # for testing purposes only
-    shutil.rmtree(path)
+    if os.path.isdir(path):
+        shutil.rmtree(path)
 
 def loadConfig():
     with open(addAbsolutePath('config.json'), 'r') as file:
