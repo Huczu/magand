@@ -16,7 +16,9 @@
 		"allValues" : true,
     "element": [ 1, 2 ],
     "//" :  "Keep results in one file or group results by rvec",
-    "separateFiles" :  true
+    "separateFiles": false,
+    "//" :  "Clean output folder every run",
+    "clean" :  true
 	},
 	"SpinOrbitMatrix": {
 		"symetries" : 2

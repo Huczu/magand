@@ -397,7 +397,8 @@ def main(argv):
         matrixes[matrix] = re.sub("[^a-zA-Z0-9]", "", matrix)
 
     startTime = timer()
-    cleanBeforeStart(addAbsolutePath(config[configType]['outputFolder']))
+    if config[configType]['clean']:
+        cleanBeforeStart(addAbsolutePath(config[configType]['outputFolder']))
     endTime = timer()
 
     print("Clean time: %f" % (endTime-startTime))
